@@ -56,7 +56,7 @@ describe("productService", () => {
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
       expect(result.success).toBeFalsy();
-      expect(result.message).toEqual("Products not found");
+      expect(result.message).toEqual("No products found");
       expect(result.responseObject).toBeNull();
     });
 
@@ -64,7 +64,7 @@ describe("productService", () => {
       // Arrange
       (productRepositoryInstance.findAllAsync as Mock).mockImplementation(
         () => {
-          throw new Error("Test error");
+          throw new Error("An error occurred while retrieving products.");
         }
       );
 
@@ -74,7 +74,9 @@ describe("productService", () => {
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
       expect(result.success).toBeFalsy();
-      expect(result.message).toEqual("Test error");
+      expect(result.message).toEqual(
+        "An error occurred while retrieving products."
+      );
       expect(result.responseObject).toBeNull();
     });
   });
@@ -118,7 +120,7 @@ describe("productService", () => {
       const testId = 1;
       (productRepositoryInstance.findByIdAsync as Mock).mockImplementation(
         () => {
-          throw new Error("Test error");
+          throw new Error("An error occurred while finding product.");
         }
       );
 
@@ -128,8 +130,73 @@ describe("productService", () => {
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
       expect(result.success).toBeFalsy();
-      expect(result.message).toEqual("Test error");
+      expect(result.message).toEqual(
+        "An error occurred while finding product."
+      );
       expect(result.responseObject).toBe;
+    });
+  });
+
+  describe("create", () => {
+    it("creates a new product", async () => {
+      // Arrange
+      const newProduct: Product = {
+        id: 3,
+        name: "Product 3",
+        available: true,
+      };
+      (productRepositoryInstance.createAsync as Mock).mockReturnValue(
+        newProduct
+      );
+
+      // Act
+      const result = await productServiceInstance.create(newProduct);
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.OK);
+      expect(result.success).toBeTruthy();
+      expect(result.message).toEqual("Product created");
+      expect(result.responseObject).toEqual(newProduct);
+    });
+
+    it("handles errors for createAsync", async () => {
+      // Arrange
+      const newProduct: Product = {
+        id: 3,
+        name: "Product 3",
+        available: true,
+      };
+      (productRepositoryInstance.createAsync as Mock).mockImplementation(() => {
+        throw new Error("An error occurred while creating product.");
+      });
+
+      // Act
+      const result = await productServiceInstance.create(newProduct);
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
+      expect(result.success).toBeFalsy();
+      expect(result.message).toEqual(
+        "An error occurred while creating product."
+      );
+      expect(result.responseObject).toBeNull();
+    });
+  });
+
+  describe("delete", () => {
+    it("deletes a product for a valid ID", async () => {
+      // Arrange
+      const testId = 1;
+      (productRepositoryInstance.deleteAsync as Mock).mockReturnValue(true);
+
+      // Act
+      const result = await productServiceInstance.delete(testId);
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.OK);
+      expect(result.success).toBeTruthy();
+      expect(result.message).toEqual("Product deleted");
+      expect(result.responseObject).toEqual(true);
     });
   });
 });

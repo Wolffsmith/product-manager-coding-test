@@ -27,8 +27,12 @@ class ProductController {
         .json({ message: "Name and available are required" });
     }
 
-    const newProduct = await productService.create({ id, name, available });
-    return handleServiceResponse(newProduct, res);
+    const serviceResponse = await productService.create({
+      id,
+      name,
+      available,
+    });
+    return handleServiceResponse(serviceResponse, res);
   };
 
   public deleteProduct: RequestHandler = async (

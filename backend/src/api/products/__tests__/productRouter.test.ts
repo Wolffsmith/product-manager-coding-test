@@ -23,6 +23,7 @@ describe("Product API Endpoints", () => {
       );
     });
   });
+
   describe("GET /products/:id", () => {
     it("should return a product for a valid ID", async () => {
       // Arrange
@@ -39,6 +40,7 @@ describe("Product API Endpoints", () => {
       expect(response.statusCode).toEqual(StatusCodes.OK);
       expect(responseBody.success).toBeTruthy();
       expect(responseBody.message).toContain("Product found");
+
       if (!expectedProduct)
         throw new Error("Invalid test data: expectedProduct is undefined");
       compareProducts(expectedProduct, responseBody.responseObject);
@@ -68,8 +70,82 @@ describe("Product API Endpoints", () => {
       // Assert
       expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
       expect(responseBody.success).toBeFalsy();
-      expect(responseBody.message).toContain("Invalid ID format");
+      expect(responseBody.message).toContain(
+        "Invalid input: ID must be a numeric value, ID must be a positive number"
+      );
       expect(responseBody.responseObject).toBeNull();
+    });
+  });
+
+  describe("POST /products", () => {
+    it("should create a new product", async () => {
+      // Arrange
+      const newProduct: Product = {
+        id: 4,
+        name: "New Product",
+        available: true,
+      };
+
+      // Act
+      const response = await request(app).post("/products").send(newProduct);
+      const responseBody: ServiceResponse<Product> = response.body;
+
+      // Assert
+      expect(response.statusCode).toEqual(StatusCodes.OK);
+      expect(responseBody.success).toBeTruthy();
+      expect(responseBody.message).toContain("Product created");
+      compareProducts(newProduct, responseBody.responseObject);
+    });
+
+    it("should return a bad request for missing product data", async () => {
+      // Act
+      const response = await request(app).post("/products").send({});
+      const responseBody: ServiceResponse = response.body;
+
+      // Assert
+      expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
+      expect(responseBody.success).toBeFalsy();
+      expect(responseBody.message).toContain("Invalid input: Required");
+      expect(responseBody.responseObject).toBeNull();
+    });
+
+    it("should return a bad request for invalid product data", async () => {
+      // Act
+      const invalidProduct = {
+        id: 4,
+        name: "New Product",
+      };
+      const response = await request(app)
+        .post("/products")
+        .send(invalidProduct);
+      const responseBody: ServiceResponse = response.body;
+
+      // Assert
+      expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
+      expect(responseBody.success).toBeFalsy();
+      expect(responseBody.message).toContain("Name and available are required");
+      expect(responseBody.responseObject).toBeUndefined();
+    });
+  });
+
+  describe("DELETE /products/:id", () => {
+    it("should delete a product for a valid ID", async () => {
+      // Arrange
+      const testId = 1;
+
+      // Act
+      const response = await request(app).delete(`/products/${testId}`);
+      const responseBody: ServiceResponse = response.body;
+
+      // Assert
+      expect(response.statusCode).toEqual(StatusCodes.OK);
+      expect(responseBody.success).toBeTruthy();
+      expect(responseBody.message).toContain("Product deleted");
+      expect(responseBody.responseObject).toEqual({
+        id: testId,
+        available: true,
+        name: "Fries",
+      });
     });
   });
 });
