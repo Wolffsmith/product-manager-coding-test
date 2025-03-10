@@ -15,6 +15,15 @@ class ProductController {
     return handleServiceResponse(serviceResponse, res);
   };
 
+  public searchProducts: RequestHandler = async (
+    req: Request,
+    res: Response
+  ) => {
+    const query = req.query.q as string;
+    const serviceResponse = await productService.search(query);
+    return handleServiceResponse(serviceResponse, res);
+  };
+
   public createProduct: RequestHandler = async (
     req: Request,
     res: Response

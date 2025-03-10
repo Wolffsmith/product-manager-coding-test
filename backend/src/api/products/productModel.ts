@@ -23,3 +23,7 @@ export const CreateProductSchema = z.object({
 export const GetProductSchema = z.object({
   params: z.object({ id: commonValidations.id }),
 });
+
+export const SearchProductSchema = z.object({
+  query: z.object({ q: z.string().optional() }),
+});

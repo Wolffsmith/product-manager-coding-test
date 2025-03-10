@@ -59,6 +59,30 @@ export class ProductService {
     }
   }
 
+  async search(query: string): Promise<ServiceResponse<Product[] | null>> {
+    try {
+      const products = await this.productRepository.searchAsync(query);
+      if (!products || products.length === 0) {
+        return ServiceResponse.failure(
+          "No products found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+      return ServiceResponse.success<Product[]>("Products found", products);
+    } catch (ex) {
+      const errorMessage = `Error searching for products: ${
+        (ex as Error).message
+      }`;
+      logger.error(errorMessage);
+      return ServiceResponse.failure(
+        "An error occurred while searching for products.",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
   async create(product: Product): Promise<ServiceResponse<Product | null>> {
     try {
       const newProduct = await this.productRepository.createAsync(product);
@@ -76,7 +100,8 @@ export class ProductService {
 
   async delete(id: number): Promise<ServiceResponse<Product | null>> {
     try {
-      const product = await this.productRepository.deleteAsync(id);
+      const product = await this.productRepository.findByIdAsync(id);
+
       if (!product) {
         return ServiceResponse.failure(
           "Product not found",
@@ -84,7 +109,27 @@ export class ProductService {
           StatusCodes.NOT_FOUND
         );
       }
-      return ServiceResponse.success<Product>("Product deleted", product);
+
+      if (product.available) {
+        return ServiceResponse.failure(
+          "Product is available, cannot delete",
+          null,
+          StatusCodes.BAD_REQUEST
+        );
+      }
+
+      const deletedProduct = await this.productRepository.deleteAsync(id);
+      if (!deletedProduct) {
+        return ServiceResponse.failure(
+          "Product not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+      return ServiceResponse.success<Product>(
+        "Product deleted",
+        deletedProduct
+      );
     } catch (ex) {
       const errorMessage = `Error deleting product with id ${id}: ${
         (ex as Error).message

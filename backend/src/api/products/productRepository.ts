@@ -19,6 +19,15 @@ export class ProductRepository {
     return products.find((product) => product.id === id) || null;
   }
 
+  async searchAsync(query: string): Promise<Product[]> {
+    if (!query) return products;
+
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // Escape special characters
+    const regex = new RegExp(escapedQuery, "i"); // Case-insensitive search
+
+    return products.filter((product) => regex.test(product.name));
+  }
+
   async createAsync(product: Product): Promise<Product> {
     products.push(product);
     return product;

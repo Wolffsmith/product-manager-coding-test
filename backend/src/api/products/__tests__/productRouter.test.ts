@@ -131,7 +131,7 @@ describe("Product API Endpoints", () => {
   describe("DELETE /products/:id", () => {
     it("should delete a product for a valid ID", async () => {
       // Arrange
-      const testId = 1;
+      const testId = 3;
 
       // Act
       const response = await request(app).delete(`/products/${testId}`);
@@ -143,8 +143,8 @@ describe("Product API Endpoints", () => {
       expect(responseBody.message).toContain("Product deleted");
       expect(responseBody.responseObject).toEqual({
         id: testId,
-        available: true,
-        name: "Fries",
+        available: false,
+        name: "Drink",
       });
     });
   });
