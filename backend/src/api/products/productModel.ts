@@ -25,5 +25,11 @@ export const GetProductSchema = z.object({
 });
 
 export const SearchProductSchema = z.object({
-  query: z.object({ q: z.string().optional() }),
+  query: z.object({
+    q: z.string().optional().describe("Search term for product names"),
+    sortBy: z
+      .enum(["id", "name", "available"])
+      .optional()
+      .describe("Sorting parameter"),
+  }),
 });

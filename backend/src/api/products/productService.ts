@@ -11,9 +11,37 @@ export class ProductService {
   constructor(repository: ProductRepository = new ProductRepository()) {
     this.productRepository = repository;
   }
-  async findAll(): Promise<ServiceResponse<Product[] | null>> {
+
+  async getProducts({
+    search,
+    sortBy,
+  }: {
+    search?: string;
+    sortBy?: string;
+  }): Promise<ServiceResponse<Product[] | null>> {
     try {
-      const products = await this.productRepository.findAllAsync();
+      let products = await this.productRepository.findAllAsync();
+
+      if (search) {
+        products = products.filter((product) =>
+          product.name.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+
+      if (sortBy) {
+        products = products.sort((a, b) => {
+          if (sortBy === "name") {
+            return a.name.localeCompare(b.name);
+          }
+
+          if (sortBy === "available") {
+            return a.available === b.available ? 0 : a.available ? -1 : 1;
+          }
+
+          return a.id - b.id;
+        });
+      }
+
       if (!products || products.length === 0) {
         return ServiceResponse.failure(
           "No products found",
@@ -21,11 +49,10 @@ export class ProductService {
           StatusCodes.NOT_FOUND
         );
       }
+
       return ServiceResponse.success<Product[]>("Products found", products);
     } catch (ex) {
-      const errorMessage = `Error finding all products: ${
-        (ex as Error).message
-      }`;
+      const errorMessage = `Error finding products: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while retrieving products.",
@@ -53,30 +80,6 @@ export class ProductService {
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while finding product.",
-        null,
-        StatusCodes.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  async search(query: string): Promise<ServiceResponse<Product[] | null>> {
-    try {
-      const products = await this.productRepository.searchAsync(query);
-      if (!products || products.length === 0) {
-        return ServiceResponse.failure(
-          "No products found",
-          null,
-          StatusCodes.NOT_FOUND
-        );
-      }
-      return ServiceResponse.success<Product[]>("Products found", products);
-    } catch (ex) {
-      const errorMessage = `Error searching for products: ${
-        (ex as Error).message
-      }`;
-      logger.error(errorMessage);
-      return ServiceResponse.failure(
-        "An error occurred while searching for products.",
         null,
         StatusCodes.INTERNAL_SERVER_ERROR
       );

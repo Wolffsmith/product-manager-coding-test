@@ -35,7 +35,7 @@ const FilterSortForm: React.FC<FilterSortFormProps> = ({
         Filter and Sort Products
       </Typography>
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={6} sm={6}>
           <FormControl fullWidth>
             <InputLabel>Sort By</InputLabel>
             <Select
@@ -45,10 +45,11 @@ const FilterSortForm: React.FC<FilterSortFormProps> = ({
             >
               <MenuItem value="">None</MenuItem>
               <MenuItem value="name">Name</MenuItem>
+              <MenuItem value="available">Available</MenuItem>
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={6} sm={6}>
           <TextField
             label="Search"
             value={searchTerm}

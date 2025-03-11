@@ -4,23 +4,20 @@ import { productService } from "@/api/products/productService";
 import { handleServiceResponse } from "@/common/utils/httpHandlers";
 
 class ProductController {
-  public getProducts: RequestHandler = async (_req: Request, res: Response) => {
-    const serviceResponse = await productService.findAll();
+  public getProducts: RequestHandler = async (req: Request, res: Response) => {
+    const { search, sortBy, available } = req.query;
+
+    const serviceResponse = await productService.getProducts({
+      search: search as string,
+      sortBy: sortBy as string,
+    });
+
     return handleServiceResponse(serviceResponse, res);
   };
 
   public getProduct: RequestHandler = async (req: Request, res: Response) => {
     const id = Number.parseInt(req.params.id as string, 10);
     const serviceResponse = await productService.findById(id);
-    return handleServiceResponse(serviceResponse, res);
-  };
-
-  public searchProducts: RequestHandler = async (
-    req: Request,
-    res: Response
-  ) => {
-    const query = req.query.q as string;
-    const serviceResponse = await productService.search(query);
     return handleServiceResponse(serviceResponse, res);
   };
 

@@ -31,15 +31,12 @@ const useProducts = (initialFilters: Filters) => {
       setError("");
 
       try {
-        console.log("Fetching products from API:", API_URL);
-
-        const response = await axios.get(
-          `${API_URL}?sortBy=${filters.sortBy}&search=${encodeURIComponent(
-            filters.search
-          )}`
-        );
-
-        console.log("API Response:", response.data);
+        const response = await axios.get(`${API_URL}`, {
+          params: {
+            sortBy: filters.sortBy,
+            search: filters.search,
+          },
+        });
 
         if (response.data.success) {
           setProducts(response.data.responseObject);
@@ -47,7 +44,6 @@ const useProducts = (initialFilters: Filters) => {
           setError(response.data.message);
         }
       } catch (err) {
-        console.error("Error fetching products:", err);
         setError("Error fetching products.");
       }
 
@@ -68,7 +64,6 @@ const useProducts = (initialFilters: Filters) => {
         setError("Failed to add product.");
       }
     } catch (error) {
-      console.error("Error adding product:", error);
       setError("Error adding product.");
     }
     setLoading(false);
@@ -87,7 +82,6 @@ const useProducts = (initialFilters: Filters) => {
         setError("Failed to delete product.");
       }
     } catch (error) {
-      console.error("Error deleting product:", error);
       setError("Error deleting product.");
     }
     setLoading(false);

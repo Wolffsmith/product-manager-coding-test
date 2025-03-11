@@ -21,6 +21,7 @@ productRegistry.registerPath({
   method: "get",
   path: "/products",
   tags: ["Product"],
+  request: { query: SearchProductSchema.shape.query },
   responses: createApiResponse(z.array(ProductSchema), "Success"),
 });
 
@@ -38,22 +39,6 @@ productRouter.get(
   "/:id",
   validateRequest(GetProductSchema),
   productController.getProduct
-);
-
-productRegistry.registerPath({
-  method: "get",
-  path: "/products/search",
-  tags: ["Product"],
-  request: {
-    query: SearchProductSchema.shape.query,
-  },
-  responses: createApiResponse(z.array(ProductSchema), "Search results"),
-});
-
-productRouter.get(
-  "/search",
-  validateRequest(SearchProductSchema),
-  productController.searchProducts
 );
 
 productRegistry.registerPath({
