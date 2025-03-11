@@ -14,10 +14,11 @@ import useProducts from "./hooks/useProducts";
 import axios from "axios";
 
 const ListProductsPage: React.FC = () => {
-  const { products, filters, setFilters, setProducts } = useProducts({
-    sortBy: "",
-    search: "",
-  });
+  const { products, filters, setFilters, setProducts, deleteProduct } =
+    useProducts({
+      sortBy: "",
+      search: "",
+    });
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,22 +28,14 @@ const ListProductsPage: React.FC = () => {
   };
 
   const handleDeleteProduct = async (id: number) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this product?"
-    );
-    if (!confirmDelete) return;
-
     try {
-      const response = await axios.delete(`/products/${id}`);
-
-      if (response.status === 204) {
-        setProducts((prev) => prev.filter((p) => p.id !== id));
-      } else {
-        alert("Failed to delete product.");
-      }
+      setLoading(true);
+      deleteProduct(id);
     } catch (err) {
       console.error("Error deleting product:", err);
-      alert("Error deleting product.");
+    } finally {
+      setLoading(false);
+      setDeleteId(null);
     }
   };
 

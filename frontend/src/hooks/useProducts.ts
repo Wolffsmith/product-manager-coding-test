@@ -58,8 +58,8 @@ const useProducts = (initialFilters: Filters) => {
     try {
       const response = await axios.post(API_URL, newProduct);
 
-      if (response.status === 201) {
-        setProducts((prev) => [...prev, response.data]);
+      if (response.status === 200) {
+        setProducts(response.data.responseObject);
       } else {
         setError("Failed to add product.");
       }
@@ -74,10 +74,8 @@ const useProducts = (initialFilters: Filters) => {
     try {
       const response = await axios.delete(`${API_URL}/${id}`);
 
-      if (response.status === 204) {
-        setProducts((prev: Product[]) =>
-          prev.filter((product) => product.id !== id)
-        );
+      if (response.status === 200) {
+        setProducts(response.data.responseObject);
       } else {
         setError("Failed to delete product.");
       }
