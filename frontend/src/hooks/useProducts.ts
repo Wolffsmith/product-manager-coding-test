@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 interface Product {
   id: number;
@@ -17,54 +17,91 @@ interface Filters {
   search: string;
 }
 
+const API_URL = "http://localhost:3000/products";
+
 const useProducts = (initialFilters: Filters) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        console.log("Fetching products from API:", API_URL);
+
+        const response = await axios.get(
+          `${API_URL}?sortBy=${filters.sortBy}&search=${encodeURIComponent(
+            filters.search
+          )}`
+        );
+
+        console.log("API Response:", response.data);
+
+        if (response.data.success) {
+          setProducts(response.data.responseObject);
+        } else {
+          setError(response.data.message);
+        }
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError("Error fetching products.");
+      }
+
+      setLoading(false);
+    };
+
     fetchProducts();
   }, [filters]);
 
-  const fetchProducts = () => {
-    let query = `http://localhost:3000/products?`;
-    if (filters.sortBy) query += `sortBy=${filters.sortBy}&`;
-    if (filters.search) query += `search=${filters.search}&`;
+  const addProduct = async (newProduct: NewProduct) => {
+    setLoading(true);
+    try {
+      const response = await axios.post(API_URL, newProduct);
 
-    axios.get(query)
-      .then(response => {
-        setProducts(response.data);
-      })
-      .catch(error => {
-        console.error('There was an error fetching the products!', error);
-      });
+      if (response.status === 201) {
+        setProducts((prev) => [...prev, response.data]);
+      } else {
+        setError("Failed to add product.");
+      }
+    } catch (error) {
+      console.error("Error adding product:", error);
+      setError("Error adding product.");
+    }
+    setLoading(false);
   };
 
-  const addProduct = (newProduct: NewProduct) => {
-    axios.post('http://localhost:3000/products', newProduct)
-      .then(response => {
-        setProducts([...products, response.data]);
-      })
-      .catch(error => {
-        console.error('There was an error adding the product!', error);
-      });
-  };
+  const deleteProduct = async (id: number) => {
+    setLoading(true);
+    try {
+      const response = await axios.delete(`${API_URL}/${id}`);
 
-  const deleteProduct = (id: number) => {
-    axios.delete(`http://localhost:3000/products/${id}`)
-      .then(() => {
-        setProducts(products.filter(product => product.id !== id));
-      })
-      .catch(error => {
-        console.error('There was an error deleting the product!', error);
-      });
+      if (response.status === 204) {
+        setProducts((prev: Product[]) =>
+          prev.filter((product) => product.id !== id)
+        );
+      } else {
+        setError("Failed to delete product.");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      setError("Error deleting product.");
+    }
+    setLoading(false);
   };
 
   return {
     products,
     filters,
     setFilters,
+    setProducts,
     addProduct,
     deleteProduct,
+    loading,
+    error,
   };
 };
 

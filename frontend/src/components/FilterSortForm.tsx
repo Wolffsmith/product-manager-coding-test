@@ -1,12 +1,34 @@
-import React from 'react';
-import { FormControl, InputLabel, Select, MenuItem, Grid, Typography, Box, TextField } from '@mui/material';
+import React, { useEffect, useState } from "react";
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+  Typography,
+  Box,
+  TextField,
+} from "@mui/material";
 
 interface FilterSortFormProps {
   filter: { sortBy: string; search: string };
-  handleFilterChange: (e: any) => void;
+  handleFilterChange: (name: string, value: string) => void;
 }
 
-const FilterSortForm: React.FC<FilterSortFormProps> = ({ filter, handleFilterChange }) => {
+const FilterSortForm: React.FC<FilterSortFormProps> = ({
+  filter,
+  handleFilterChange,
+}) => {
+  const [searchTerm, setSearchTerm] = useState(filter.search);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      handleFilterChange("search", searchTerm);
+    }, 500); // Debounce for 500ms
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
   return (
     <Box mb={4}>
       <Typography variant="h5" gutterBottom>
@@ -19,7 +41,7 @@ const FilterSortForm: React.FC<FilterSortFormProps> = ({ filter, handleFilterCha
             <Select
               name="sortBy"
               value={filter.sortBy}
-              onChange={handleFilterChange}
+              onChange={(e) => handleFilterChange("sortBy", e.target.value)}
             >
               <MenuItem value="">None</MenuItem>
               <MenuItem value="name">Name</MenuItem>
@@ -29,9 +51,8 @@ const FilterSortForm: React.FC<FilterSortFormProps> = ({ filter, handleFilterCha
         <Grid item xs={12} sm={6}>
           <TextField
             label="Search"
-            name="search"
-            value={filter.search}
-            onChange={handleFilterChange}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             fullWidth
           />
         </Grid>
