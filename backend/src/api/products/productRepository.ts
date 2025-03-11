@@ -28,18 +28,18 @@ export class ProductRepository {
     return products.filter((product) => regex.test(product.name));
   }
 
-  async createAsync(product: Product): Promise<Product> {
+  async createAsync(product: Product): Promise<Product[]> {
     products.push(product);
-    return product;
+    return products;
   }
 
-  async deleteAsync(id: number): Promise<Product | null> {
+  async deleteAsync(id: number): Promise<Product[] | null> {
     const product = products.find((p) => p.id === id);
     if (!product) {
       return null;
     }
     const index = products.indexOf(product);
     products.splice(index, 1);
-    return product;
+    return products;
   }
 }

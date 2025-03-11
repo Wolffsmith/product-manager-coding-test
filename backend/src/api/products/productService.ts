@@ -86,10 +86,10 @@ export class ProductService {
     }
   }
 
-  async create(product: Product): Promise<ServiceResponse<Product | null>> {
+  async create(product: Product): Promise<ServiceResponse<Product[] | null>> {
     try {
       const newProduct = await this.productRepository.createAsync(product);
-      return ServiceResponse.success<Product>("Product created", newProduct);
+      return ServiceResponse.success<Product[]>("Product created", newProduct);
     } catch (ex) {
       const errorMessage = `Error creating product: ${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -101,7 +101,7 @@ export class ProductService {
     }
   }
 
-  async delete(id: number): Promise<ServiceResponse<Product | null>> {
+  async delete(id: number): Promise<ServiceResponse<Product[] | null>> {
     try {
       const product = await this.productRepository.findByIdAsync(id);
 
@@ -121,18 +121,15 @@ export class ProductService {
         );
       }
 
-      const deletedProduct = await this.productRepository.deleteAsync(id);
-      if (!deletedProduct) {
+      const updatedList = await this.productRepository.deleteAsync(id);
+      if (!updatedList) {
         return ServiceResponse.failure(
           "Product not found",
           null,
           StatusCodes.NOT_FOUND
         );
       }
-      return ServiceResponse.success<Product>(
-        "Product deleted",
-        deletedProduct
-      );
+      return ServiceResponse.success<Product[]>("Product deleted", updatedList);
     } catch (ex) {
       const errorMessage = `Error deleting product with id ${id}: ${
         (ex as Error).message
