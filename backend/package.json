@@ -15,6 +15,7 @@
     "lint:fix": "biome check src/ --fix",
     "format": "biome format src/",
     "test": "vitest run",
+    "test:watch": "vitest --watch",
     "prepare": "husky"
   },
   "dependencies": {

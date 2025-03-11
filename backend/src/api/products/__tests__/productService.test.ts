@@ -29,58 +29,6 @@ describe("productService", () => {
     productServiceInstance = new ProductService(productRepositoryInstance);
   });
 
-  describe("findAll", () => {
-    it("return all products", async () => {
-      // Arrange
-      (productRepositoryInstance.findAllAsync as Mock).mockReturnValue(
-        mockProducts
-      );
-
-      // Act
-      const result = await productServiceInstance.findAll();
-
-      // Assert
-      expect(result.statusCode).toEqual(StatusCodes.OK);
-      expect(result.success).toBeTruthy();
-      expect(result.message).toEqual("Products found");
-      expect(result.responseObject).toEqual(mockProducts);
-    });
-
-    it("returns a not found error for no products found", async () => {
-      // Arrange
-      (productRepositoryInstance.findAllAsync as Mock).mockReturnValue(null);
-
-      // Act
-      const result = await productServiceInstance.findAll();
-
-      // Assert
-      expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
-      expect(result.success).toBeFalsy();
-      expect(result.message).toEqual("No products found");
-      expect(result.responseObject).toBeNull();
-    });
-
-    it("handles errors for findAllAsync", async () => {
-      // Arrange
-      (productRepositoryInstance.findAllAsync as Mock).mockImplementation(
-        () => {
-          throw new Error("An error occurred while retrieving products.");
-        }
-      );
-
-      // Act
-      const result = await productServiceInstance.findAll();
-
-      // Assert
-      expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
-      expect(result.success).toBeFalsy();
-      expect(result.message).toEqual(
-        "An error occurred while retrieving products."
-      );
-      expect(result.responseObject).toBeNull();
-    });
-  });
-
   describe("findById", () => {
     it("returns a product for a valid ID", async () => {
       // Arrange
@@ -134,60 +82,6 @@ describe("productService", () => {
         "An error occurred while finding product."
       );
       expect(result.responseObject).toBe;
-    });
-  });
-
-  describe("search", () => {
-    it("returns products for a valid query", async () => {
-      // Arrange
-      const query = "Product";
-      const mockSearchResults = mockProducts;
-      (productRepositoryInstance.searchAsync as Mock).mockReturnValue(
-        mockSearchResults
-      );
-
-      // Act
-      const result = await productServiceInstance.search(query);
-
-      // Assert
-      expect(result.statusCode).toEqual(StatusCodes.OK);
-      expect(result.success).toBeTruthy();
-      expect(result.message).toEqual("Products found");
-      expect(result.responseObject).toEqual(mockSearchResults);
-    });
-
-    it("returns a not found error for no products matching the query", async () => {
-      // Arrange
-      const query = "NonExistentProduct";
-      (productRepositoryInstance.searchAsync as Mock).mockReturnValue([]);
-
-      // Act
-      const result = await productServiceInstance.search(query);
-
-      // Assert
-      expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
-      expect(result.success).toBeFalsy();
-      expect(result.message).toEqual("No products found");
-      expect(result.responseObject).toBeNull();
-    });
-
-    it("handles errors for searchAsync", async () => {
-      // Arrange
-      const query = "Product";
-      (productRepositoryInstance.searchAsync as Mock).mockImplementation(() => {
-        throw new Error("An error occurred while searching for products.");
-      });
-
-      // Act
-      const result = await productServiceInstance.search(query);
-
-      // Assert
-      expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
-      expect(result.success).toBeFalsy();
-      expect(result.message).toEqual(
-        "An error occurred while searching for products."
-      );
-      expect(result.responseObject).toBeNull();
     });
   });
 
@@ -279,6 +173,121 @@ describe("productService", () => {
       expect(result.statusCode).toEqual(StatusCodes.BAD_REQUEST);
       expect(result.success).toBeFalsy();
       expect(result.message).toEqual("Product is available, cannot delete");
+      expect(result.responseObject).toBeNull();
+    });
+  });
+
+  describe("getProducts", () => {
+    it("returns products with no filters", async () => {
+      // Arrange
+      (productRepositoryInstance.findAllAsync as Mock).mockReturnValue(
+        mockProducts
+      );
+
+      // Act
+      const result = await productServiceInstance.getProducts({});
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.OK);
+      expect(result.success).toBeTruthy();
+      expect(result.message).toEqual("Products found");
+      expect(result.responseObject).toEqual(mockProducts);
+    });
+
+    it("returns filtered products by search term", async () => {
+      // Arrange
+      const search = "Product 1";
+      const filteredProducts = mockProducts.filter((product) =>
+        product.name.toLowerCase().includes(search.toLowerCase())
+      );
+      (productRepositoryInstance.findAllAsync as Mock).mockReturnValue(
+        mockProducts
+      );
+
+      // Act
+      const result = await productServiceInstance.getProducts({ search });
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.OK);
+      expect(result.success).toBeTruthy();
+      expect(result.message).toEqual("Products found");
+      expect(result.responseObject).toEqual(filteredProducts);
+    });
+
+    it("returns sorted products by name", async () => {
+      // Arrange
+      const sortBy = "name";
+      const sortedProducts = [...mockProducts].sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
+      (productRepositoryInstance.findAllAsync as Mock).mockReturnValue(
+        mockProducts
+      );
+
+      // Act
+      const result = await productServiceInstance.getProducts({ sortBy });
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.OK);
+      expect(result.success).toBeTruthy();
+      expect(result.message).toEqual("Products found");
+      expect(result.responseObject).toEqual(sortedProducts);
+    });
+
+    it("returns sorted products by availability", async () => {
+      // Arrange
+      const sortBy = "available";
+      const sortedProducts = [...mockProducts].sort((a, b) =>
+        a.available === b.available ? 0 : a.available ? -1 : 1
+      );
+      (productRepositoryInstance.findAllAsync as Mock).mockReturnValue(
+        mockProducts
+      );
+
+      // Act
+      const result = await productServiceInstance.getProducts({ sortBy });
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.OK);
+      expect(result.success).toBeTruthy();
+      expect(result.message).toEqual("Products found");
+      expect(result.responseObject).toEqual(sortedProducts);
+    });
+
+    it("returns no products found when no products match search term", async () => {
+      // Arrange
+      const search = "Non-existent Product";
+      (productRepositoryInstance.findAllAsync as Mock).mockReturnValue(
+        mockProducts
+      );
+
+      // Act
+      const result = await productServiceInstance.getProducts({ search });
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
+      expect(result.success).toBeFalsy();
+      expect(result.message).toEqual("No products found");
+      expect(result.responseObject).toBeNull();
+    });
+
+    it("handles errors for findAllAsync", async () => {
+      // Arrange
+      (productRepositoryInstance.findAllAsync as Mock).mockImplementation(
+        () => {
+          throw new Error("An error occurred while retrieving products.");
+        }
+      );
+
+      // Act
+      const result = await productServiceInstance.getProducts({});
+
+      // Assert
+      expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
+      expect(result.success).toBeFalsy();
+      expect(result.message).toEqual(
+        "An error occurred while retrieving products."
+      );
       expect(result.responseObject).toBeNull();
     });
   });
